@@ -1,0 +1,65 @@
+Grade: 25.00/35.00
+
+2 Deduction(s):
+
+--------------
+#1: 4.00 points
+Failing test: test_create_graph: 
+        @points=4
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a0/a0_test.py", line 85, in test_create_graph
+    self.assertEqual(n, 6)
+AssertionError: 0 != 6
+
+source:
+    def test_create_graph(self):
+         """
+         @points=4
+         """
+         graph = create_graph(
+             [{'screen_name': 'a', 'friends': [1, 2, 3]},
+              {'screen_name': 'b', 'friends': [2, 3, 4]},
+              {'screen_name': 'c', 'friends': [1, 2, 3]}],
+             Counter({1: 2, 2: 3, 3: 2, 4:1})
+             )
+         n = len(graph.nodes())
+         e = len(graph.edges())
+         self.assertEqual(n, 6)
+         self.assertEqual(e, 8)
+--------------
+
+--------------
+#2: 6.00 points
+Failing test: test_friend_overlap: 
+        @points=6
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a0/a0_test.py", line 56, in test_friend_overlap
+    self.assertListEqual(r, [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)])
+AssertionError: Lists differ: [['a', 'c', 3], ['a', 'b', 2], ['b', 'c', 2]] != [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)]
+
+First differing element 0:
+['a', 'c', 3]
+('a', 'c', 3)
+
+- [['a', 'c', 3], ['a', 'b', 2], ['b', 'c', 2]]
+?  ^           ^  ^           ^  ^            -
+
++ [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)]
+?  ^           ^  ^           ^  ^           +
+
+
+source:
+    def test_friend_overlap(self):
+         """
+         @points=6
+         """
+         r = friend_overlap([
+                 {'screen_name': 'a', 'friends': [1, 2, 3]},
+                 {'screen_name': 'b', 'friends': [2, 3, 4]},
+                 {'screen_name': 'c', 'friends': [1, 2, 3]},
+                 ])
+         self.assertListEqual(r, [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)])
+--------------
+
