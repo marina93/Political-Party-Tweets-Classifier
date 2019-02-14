@@ -41,11 +41,11 @@ import sys
 import time
 from TwitterAPI import TwitterAPI
 
+# these tokens didn't work so I used others for testing -awc
 consumer_key = '0DjOwpyU0orfxr1XG0newJdG7'
 consumer_secret = 'g4x0yLvedHZtjushao1bOHtMKIaG53RaGF3JrWE69J9fhAMFOP'
 access_token = '1090407968028459008-xnMGyTg8cUpbNx0GZ83rrNTHmVRYsS '
 access_token_secret = 'nJadsxhbZuuN6WvOIr3PQfEyjrzh4OCQFsvkdmW0Lc3WK'
-
 
 
 # This method is done for you.
