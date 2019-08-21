@@ -23,46 +23,33 @@ from TwitterAPI import TwitterAPI
 
 
 
-# =============================================================================
-# #YO NUEVAS
-# consumer_key = 'yuBdTI32ESnZYdLuJAElEGvL5'
-# consumer_secret = 'DNycDzVl3Yeqleog1DyiWMYKjBHjmo5S5kgw05yndMMyVfeJ35'
-# access_token = '1090407968028459008-R9ZYN3WrmFSyOVtN4SGTVFtD75BI58'
-# access_token_secret = 'OciUhBYBZp67foDHVMZuuirIC2aLGykhrsRjK3dCWngBK'
-# =============================================================================
-#JOSEPA
-consumer_key = 'RRkJlRIsNGvsZ9E1GW8V5MRXP'
-consumer_secret = 'jxmWkddzHgVSh5gsCqRPOUCBx5OCFdTAtMzhgqPdUIBNatDr7a'
-access_token = '3020342014-gwUKeKgKGKTxP6xxFrRDec5Pwi6uE2gEZUlHie1'
-access_token_secret = 'Vaqmg0cCa3hpQQT3zbApv2bzsiTZchbtX5xHDl8siqOMb'
-# =============================================================================
-# 
-# #MANU
-# consumer_key = 'R1Fc15NNPRwQYYNl31N4UQvkW'
-# consumer_secret = '7rDpmsIQJjr5B5AlvP1j5IBIG3aWbGrNL6xWBNG3cKQeQmawRd'
-# access_token = '1088134586020839424-GFkAElFoEG5dAdH0hH3dFHrnhjbD2K'
-# access_token_secret = 'isgVsLChdIQRSZw6raq646mEuMSPayNa3M13UC2Vkijhn'
-# =============================================================================
+# Twitter keys
+consumer_key = ''
+consumer_secret = ''
+access_token = ''
+access_token_secret = ''
 
-# =============================================================================
-# consumer_key = 'QHYcvYjY3HtkLCVksaKGZfdAe'
-# consumer_secret = 'Yz3hNqDL9VcLDq24eCMhBHyHyXBYwJDK0EVPFQnA3AS7PFA2I3'
-# access_token = '1090407968028459008-NOFwbMEOON0Dn8LYwx36LIdq0xWRr2'
-# access_token_secret = 'wHG8hTHajd29zbOpbGlel3tPte0c0wnY34wcWI6Gc0hgs'
-# =============================================================================
-
-
-# =============================================================================
-# Number of users collected:
-# Number of messages collected:
-# Number of communities discovered:
-# Average number of users per community:
-# Number of instances per class found:
-# One example from each class:
-# =============================================================================
+"""
+Construct an instance of TwitterAPI using the tokens entered above.
+Returns:
+    An instance of TwitterAPI.
+"""
 def get_twitter():
     return TwitterAPI(consumer_key, consumer_secret, access_token, access_token_secret)
 
+"""
+Handle Twitter's rate limiting
+Sleep for 15 minutes if a Twitter request fails.
+Do this at most max_tries times before quitting.
+    Args:
+      twitter .... A TwitterAPI object.
+      resource ... A resource string to request; e.g., "friends/ids"
+      params ..... A parameter dict for the request, e.g., to specify
+                   parameters like screen_name or count.
+      max_tries .. The maximum number of tries to attempt.
+    Returns:
+      A TwitterResponse object, or None if failed.
+"""
 def robust_request(twitter, resource, params, max_tries=5):
 
     for i in range(max_tries):
@@ -74,6 +61,15 @@ def robust_request(twitter, resource, params, max_tries=5):
             sys.stderr.flush()
             time.sleep(61 * 15)               
 
+"""
+Retrieve the tweets for screen_name.
+Params:
+    twitter.......The TwitterAPI object.
+    screen_name...A string of the user screen_name
+    limit.........Maximum number of tweets retrieved
+Returns:
+    A list of tweets of the user
+"""
 def get_tweets(twitter, screen_name, limit):
     tweets = []
     request = robust_request(twitter, 'statuses/user_timeline', {'screen_name': screen_name, 'count': limit})
@@ -81,29 +77,46 @@ def get_tweets(twitter, screen_name, limit):
         tweets.append(r['text'])
     return tweets
 
-def get_friends(twitter, user):
+"""
+Retrieve the list of friends for the user given
+Params:
+    twitter.......The TwitterAPI object.
+    screen_name...A string of the user screen_name
+Returns:
+    A list of ids of the user's friends
+"""
+def get_friends(twitter, screen_name):
     friendids = []
     resources = 'friends/ids'
-    request = robust_request(twitter, resources, {'screen_name':user})
+    request = robust_request(twitter, resources, {'screen_name':screen_name})
     friendids = sorted([id for id in request])
     return friendids
 
-
+"""
+Save a local file with the list of friends for each user
+Params:
+    twitter.......The TwitterAPI object.
+    users.........A list of user objects
+    path..........Path where to save the data
+    filename......Name to give to the new created file
+Returns:
+     Nothing
+"""
 def add_all_friends(twitter, users,path,filename):
-
     for u in users:
         friends = get_friends(twitter, u['screen_name']) 
         u['friends']=friends
     saveData(path,filename, users)
 
+"""
+Print the number of friends per candidate, sorted by candidate name.
+Args:
+    users....The list of user dicts.
+Returns:
+     Nothing
+"""
 def print_num_friends(users):
-    """Print the number of friends per candidate, sorted by candidate name.
-    See Log.txt for an example.
-    Args:
-        users....The list of user dicts.
-    Returns:
-        Nothing
-    """
+
     names = []
     cnt = Counter()
     for u in users:
@@ -113,32 +126,70 @@ def print_num_friends(users):
     for n in names:
         print(str(n) +" has "+str(cnt[n])+" friends.")
 
+"""
+Count the number of friends for all candidates
+Args:
+    users....The list of user dicts.
+Returns:
+    A Counter object containing the number of friends for each user.
+"""
 def count_friends(users):
     cnt = Counter()
     for k,v in users.items():
         for f in users[k]['friends']:
             cnt[f] +=1
     return cnt
-        
+
+"""
+Retrieve user objects for each screen_name
+Args:
+    twitter.......The TwitterAPI object.
+    screen_names...A list of strings of the users screen_name
+Returns:
+     A list of user objects
+"""       
 def get_users(twitter, screen_names):
     users = []
     for name in screen_names:
         users += robust_request(twitter, 'users/lookup', {'screen_name': name})
     return users   
 
+"""
+Retrieve user screen names for each user id
+Args:
+    twitter.......The TwitterAPI object.
+    userIds...A list of strings of the users ids
+Returns:
+     A list of user screen names
+"""  
 def getScreenName(twitter, userIds):
     screenNames = []     
     for userId in userIds:
         screenNames += robust_request(twitter, 'users/show', {'user_id': userId})
     return screenNames 
- 
+
+"""
+Retrieve user id for each screen_name
+Args:
+    twitter.......The TwitterAPI object.
+    screen_names...A list of strings of the users screen_name
+Returns:
+     A list of strings containing user ids
+"""   
 def getId(twitter, screen_name):
     resource = 'users/lookup'
     resp = robust_request(twitter, resource, {'screen_name':screen_name})
     userId = resp.json()[0]['id']
     return userId
 
-
+"""
+Retrieve user objects for each screen_name
+Args:
+    users...........A list containing user objects
+    friend_counts...A Counter object containing the number of friends of each user
+Returns:
+     A graph representing the relationship between all users and friends.
+"""  
 def create_graph(users, friend_counts):
     G = nx.Graph()
     common = friend_counts.most_common()
@@ -155,6 +206,13 @@ def create_graph(users, friend_counts):
             break
     return G
 
+"""
+Retrieve common friends between each pair of users
+Args:
+    users...........A list containing user objects
+Returns:
+    List containing each pair of users and the number of common friends, sorted by number of common friends.
+""" 
 def friend_overlap(users):
     overlap = []
     i = 0
@@ -169,6 +227,16 @@ def friend_overlap(users):
     sorted_by_number = sorted(sorted_name, key=lambda tup: tup[2], reverse=True)
     return sorted_by_number
 
+"""
+Plot a network representing how the community of users is connected. Nodes are users and 
+links represent connection between users.
+Args:
+    graph...........Nodes and edges between users
+    users...........List of twitter user objects
+    filename........Destination file to safe the figure
+Returns:
+     Nothing
+""" 
 def draw_network(graph, users, filename):
     
     pos= nx.spring_layout(graph)
@@ -185,17 +253,42 @@ def draw_network(graph, users, filename):
 
     plt.savefig(filename)
     plt.show()
-    
+
+"""
+Save into a local file the data retrieved from Twitter
+Args:
+    path...........Path where the file will be saved
+    filename.......Name given to the file created
+    s_object.......Dict containing the data to save
+Returns:
+     Nothing
+"""   
 def saveData(path, filename, s_object):
     fileroute = path+'/'+filename
     with open(fileroute, "wb") as f:
         pickle.dump(s_object, f, pickle.HIGHEST_PROTOCOL)
 
+"""
+Load file data into a dictionary
+Args:
+    path...........Path where the file is saved
+    filename.......Name of the file to load
+Returns:
+     Dictionary containing the data read from the file
+"""
 def loadData(path,filename):
     fileroute = path+filename
     d = pickle.load( open( fileroute, "rb" ) )
     return d    
 
+"""
+Retrieve the screen name from the user id
+Args:
+    twitter...........The TwitterAPI object
+    users.............Name given to the file created
+Returns:
+     List containing the (screen_name,id) pair for each user
+"""
 def id2sn(twitter, users):
     id2sn = []
     
@@ -205,6 +298,19 @@ def id2sn(twitter, users):
             sn = robust_request(twitter, 'users/show', {'user_id': f})
             id2sn.append((sn, f))
     return id2sn
+
+"""
+Main function, called upon execution of the program.
+Retrieves the user data of a list of republicans and democrats.
+Saves their user data into a local file named 'users.file' and 
+the tweets into a file named 'test.file'.
+Extracts the friends overlap between users and plots and saves a graph representing
+the relationship between them.
+Args:
+    None
+Returns:
+    Nothing
+"""
 def main():
     
     dirData = "./data"
@@ -230,11 +336,7 @@ def main():
     userId4 = getId(twitter, user4)
     user5 ='RobWittman'
     userId5 = getId(twitter, user5)
-# =============================================================================
-#     user6 ='boblatta'
-#     userId6 = getId(twitter, user6)
-# =============================================================================
-    
+
           
     # Getting democrats   
     user9 = 'RepDarrenSoto'
@@ -247,11 +349,6 @@ def main():
     userId12 = getId(twitter, user12)
     user13 ='RepBarragan'
     userId13 = getId(twitter, user13)
-# =============================================================================
-#     user14 ='RepMcEachin'
-#     userId14 = getId(twitter, user14) 
-# =============================================================================
-
 
     republicans = []
     republicans.append((user1, userId1))
@@ -259,8 +356,6 @@ def main():
     republicans.append((user3, userId3))
     republicans.append((user4, userId4))
     republicans.append((user5, userId5))
-  #  republicans.append((user6, userId6))
-
     
     democrats = []
     democrats.append((user9, userId9))
@@ -268,7 +363,6 @@ def main():
     democrats.append((user11, userId11))
     democrats.append((user12, userId12))
     democrats.append((user13, userId13))
-  #  democrats.append((user14, userId14))
     
     users = dict()
     for user in republicans:
