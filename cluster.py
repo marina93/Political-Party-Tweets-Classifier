@@ -18,48 +18,40 @@ import time
 import sys
 
 
-#YO NUEVAS
-consumer_key = 'yuBdTI32ESnZYdLuJAElEGvL5'
-consumer_secret = 'DNycDzVl3Yeqleog1DyiWMYKjBHjmo5S5kgw05yndMMyVfeJ35'
-access_token = '1090407968028459008-R9ZYN3WrmFSyOVtN4SGTVFtD75BI58'
-access_token_secret = 'OciUhBYBZp67foDHVMZuuirIC2aLGykhrsRjK3dCWngBK'
-# =============================================================================
-# #JOSEPA
-# consumer_key = 'RRkJlRIsNGvsZ9E1GW8V5MRXP'
-# consumer_secret = 'jxmWkddzHgVSh5gsCqRPOUCBx5OCFdTAtMzhgqPdUIBNatDr7a'
-# access_token = '3020342014-gwUKeKgKGKTxP6xxFrRDec5Pwi6uE2gEZUlHie1'
-# access_token_secret = 'Vaqmg0cCa3hpQQT3zbApv2bzsiTZchbtX5xHDl8siqOMb'
-# =============================================================================
-# =============================================================================
-# 
-# #MANU
-# consumer_key = 'R1Fc15NNPRwQYYNl31N4UQvkW'
-# consumer_secret = '7rDpmsIQJjr5B5AlvP1j5IBIG3aWbGrNL6xWBNG3cKQeQmawRd'
-# access_token = '1088134586020839424-GFkAElFoEG5dAdH0hH3dFHrnhjbD2K'
-# access_token_secret = 'isgVsLChdIQRSZw6raq646mEuMSPayNa3M13UC2Vkijhn'
-# =============================================================================
+consumer_key = ''
+consumer_secret = ''
+access_token = ''
+access_token_secret = ''
 
-# =============================================================================
-# consumer_key = 'QHYcvYjY3HtkLCVksaKGZfdAe'
-# consumer_secret = 'Yz3hNqDL9VcLDq24eCMhBHyHyXBYwJDK0EVPFQnA3AS7PFA2I3'
-# access_token = '1090407968028459008-NOFwbMEOON0Dn8LYwx36LIdq0xWRr2'
-# access_token_secret = 'wHG8hTHajd29zbOpbGlel3tPte0c0wnY34wcWI6Gc0hgs'
-# =============================================================================
-
-
-# =============================================================================
-# Number of users collected:
-# Number of messages collected:
-# Number of communities discovered:
-# Average number of users per community:
-# Number of instances per class found:
-# One example from each class:
-# =============================================================================
-
+"""
+Create graph from text file data
+Params:
+    None
+Returns:
+    Graph object with the data read from the text file
+"""
 def load_graph():
     graph = pickle.load(open('./data/graph.txt','rb'))
     return graph
-    
+
+ """
+Implement Breadth-First Search algorithm. 
+Iterates over a queue of nodes. Starts from the root node and adds its neighbors to the queue. 
+The algorithm will stop when the maximum depth is reached or when all the nodes have been visited.
+Creates a list of seen nodes to avoid visitting a node twice.
+Params:
+    graph.......A networkx Graph
+    root........The root node in the search graph (a string). We are computing
+                shortest paths from this node to all others.
+    max_depth...An integer representing the maximum depth to search.
+Returns:
+    node2distances...dict from each node to the length of the shortest path from
+                    the root node
+    node2num_paths...dict from each node to the number of shortest paths from the
+                    root node to this node.
+    node2parents.....dict from each node to the list of its parents in the search
+                    tree
+"""   
 def bfs(graph, root, max_depth):
 
     depth = 0
@@ -92,13 +84,22 @@ def bfs(graph, root, max_depth):
 
     return node2distances, node2num_paths, node2parents
       
-    
-def complexity_of_bfs(V, E, K):
 
-    r = min(V + E, K)
-    return r
-
-
+ """
+ Compute the final step of the Girvan-Newman algorithm.
+ Params:
+      root.............The root node in the search graph (a string). We are computing
+                       shortest paths from this node to all others.
+      node2distances...dict from each node to the length of the shortest path from
+                       the root node
+      node2num_paths...dict from each node to the number of shortest paths from the
+                       root node that pass through this node.
+      node2parents.....dict from each node to the list of its parents in the search
+                       tree
+    Returns:
+      A dict mapping edges to credit value. Each key is a tuple of two strings
+      representing an edge (e.g., ('A', 'B')). Each tuple is sorted alphabetically
+ """     
 def bottom_up(root, node2distances, node2num_paths, node2parents):
 
     nodes_credit = defaultdict(float)
@@ -123,10 +124,20 @@ def bottom_up(root, node2distances, node2num_paths, node2parents):
                 nodes_credit[node] += edges_credit[(n1,n2)]
         
     return edges_credit                                          
-            
    
-   
-    
+"""
+Compute the approximate betweenness of each edge, using max_depth to reduce
+computation time in breadth-first search. bfs and bottom_up functions are called for each node
+in the graph
+
+Params:
+    graph.......A networkx Graph
+    max_depth...An integer representing the maximum depth to search.
+
+Returns:
+    A dict mapping edges to betweenness. Each key is a tuple of two strings
+    representing an edge (e.g., ('A', 'B')). Tuples are sorted alphabetically
+"""   
 def approximate_betweenness(graph, max_depth):
 
     betweenness = defaultdict(float)
@@ -141,10 +152,25 @@ def approximate_betweenness(graph, max_depth):
 
     return betweenness
 
+"""
+A helper function that returns the list of all connected components in the given graph.
+"""
 def get_components(graph):
 
     return [c for c in nx.connected_component_subgraphs(graph)]
 
+
+"""
+Make a partition of the graph using the implemented method approximate_betweenness.
+The method computes the approximate betweennes of all edges, and removes edges until 
+more than one component is created and returns the components.
+Params:
+    graph.......A networkx Graph
+    max_depth...An integer representing the maximum depth to search.
+
+Returns:
+    A list of networkx Graph objects, one per partition.
+"""
 def partition_girvan_newman(graph, max_depth):
 
     graph_copy = graph.copy()
@@ -164,7 +190,15 @@ def partition_girvan_newman(graph, max_depth):
         
     return components
 
-    
+"""
+Return a subgraph containing nodes whose degree is greater than or equal to min_degree.
+This function will be used in the main method to prune the original graph.
+Params:
+    graph........a networkx graph
+    min_degree...degree threshold
+Returns:
+    a networkx graph, filtered as defined above.
+""" 
 def get_subgraph(graph, min_degree):
 
     subgraph = graph.copy()
@@ -176,7 +210,14 @@ def get_subgraph(graph, min_degree):
             
     return subgraph
 
-
+"""
+Compute the volume for a list of nodes, which is the number of edges in `graph` with at least one end in nodes.
+Params:
+    nodes...a list of strings for the nodes to compute the volume of.
+    graph...a networkx graph
+Return:
+    volume: int with the number of edges with one end in nodes
+"""
 def volume(nodes, graph):
     volume = 0
     for edge in graph.edges():
@@ -188,12 +229,20 @@ def volume(nodes, graph):
     return volume
                 
 
-
+"""
+Compute the cut-set of the cut (S,T), which is
+the set of edges that have one endpoint in S and
+the other in T.
+Params:
+    S.......set of nodes in first subset
+    T.......set of nodes in second subset
+    graph...networkx graph
+Returns:
+    An int representing the cut-set.
+"""
 def cut(S, T, graph):
 
-    
-    cut_set = 0
-    
+    cut_set = 0 
     
     for edge in graph.edges(): 
         nodeS = False
@@ -212,9 +261,15 @@ def cut(S, T, graph):
     
     return cut_set
             
-                
-
-
+ """
+    The normalized cut value for the cut S/T. 
+    Params:
+      S.......set of nodes in first subset
+      T.......set of nodes in second subset
+      graph...networkx graph
+    Returns:
+      A float representing the normalized cut value
+"""           
 def norm_cut(S, T, graph):
     ncv = 0
     
@@ -224,9 +279,19 @@ def norm_cut(S, T, graph):
     volT = volume(T, graph)
     ncv = (cutST/volS) + (cutST/volT)
     return ncv
-    
 
-
+ """
+Enumerate over all possible cuts of the graph, up to max_size, and compute the norm cut score.
+Params:
+    graph......graph to be partitioned
+    max_size...maximum number of edges to consider for each cut.
+                E.g, if max_size=2, consider removing edge sets
+                of size 1 or 2 edges.
+Returns:
+    (unsorted) list of (score, edge_list) tuples, where
+    score is the norm_cut score for each cut, and edge_list
+    is the list of edges (source, target) for each cut.
+"""   
 def brute_force_norm_cut(graph, max_size):
 
     comb = combinations(graph.edges(), max_size)
@@ -258,7 +323,22 @@ def brute_force_norm_cut(graph, max_size):
                     result.append((score,edge_list))
     return result
     
-    
+"""
+In order to assess the quality of the approximate partitioning method
+we've developed, we will run it with different values for max_depth
+and see how it affects the norm_cut score of the resulting partitions.
+Recall that smaller norm_cut scores correspond to better partitions.
+
+Params:
+    graph........a networkx Graph
+    max_depths...a list of ints for the max_depth values to be passed
+                to calls to partition_girvan_newman
+
+Returns:
+    A list of (int, float) tuples representing the max_depth and the
+    norm_cut value obtained by the partitions returned by
+    partition_girvan_newman.
+    """    
 def score_max_depths(graph, max_depths):
 
     result = []
@@ -273,7 +353,19 @@ def score_max_depths(graph, max_depths):
     return result
 
 
+"""
+    Remove the edges to the first n neighbors of
+    test_node, where the neighbors are sorted alphabetically.
 
+    Params:
+      graph.......a networkx Graph
+      test_node...a string representing one node in the graph whose
+                  edges will be removed.
+      n...........the number of edges to remove.
+
+    Returns:
+      A *new* networkx Graph with n edges removed.
+    """
 def make_training_graph(graph, test_node, n):
 
     graphCopy = graph.copy()
@@ -282,7 +374,21 @@ def make_training_graph(graph, test_node, n):
       graphCopy.remove_edge(test_node, n)
     return graphCopy
         
-       
+ """
+Compute the k highest scoring edges to add to this node based on
+the Jaccard similarity measure.
+Note that we don't return scores for edges that already appear in the graph.
+
+Params:
+    graph....a networkx graph
+    node.....a node in the graph (a string) to recommend links for.
+    k........the number of links to recommend.
+
+Returns:
+    A list of tuples in descending order of score representing the
+    recommended new edges. Ties are broken by
+    alphabetical order of the terminal node in the edge.
+"""      
 def jaccard(graph, node, k):
 
     neighbors = set(graph.neighbors(node))
@@ -303,7 +409,14 @@ def jaccard(graph, node, k):
     
     return result        
         
+"""
+Return the fraction of the predicted edges that exist in the graph.
 
+Args:
+    predicted_edges...a list of edges (tuples) that are predicted to
+                    exist in this graph
+    graph.............a networkx Graph
+"""
 def evaluate(predicted_edges, graph):
 
     result = 0
@@ -317,41 +430,42 @@ def evaluate(predicted_edges, graph):
     result = predicted/len(predicted_edges)
     return result
 
-
+"""
+Load the data from Twitter saved when running collect.py
+Args:
+    path...............path where the file is saved
+    filename...........name of the file
+Return:
+    dict containing the data from Twitter
+"""
 def loadData(path,filename):
     fileroute = path+filename
     d = pickle.load( open( fileroute, "rb" ) )
     return d
 
-def count_friends(users):
-    cnt = Counter()
-    for k,v in users.items():
-        for f in users[k]['friends']:
-            cnt[f] +=1
-    return cnt
- 
-
-def create_graph(users, friend_counts):
-    G = nx.Graph()
-    common = friend_counts.most_common()
-    
-    for k in users.keys():
-        G.add_node(k[1])
-    for ele in common:
-        if(ele[1]>1):
-            G.add_node(ele[0])
-            for k,v in users.items():
-                if ele[0] in v:
-                    G.add_edge(k[1], ele[0])
-        else:
-            break
-    return G
-
+"""
+Save into a local file the data retrieved from Twitter
+Args:
+    path...........Path where the file will be saved
+    filename.......Name given to the file created
+    s_object.......Dict containing the data to save
+Returns:
+     Nothing
+"""  
 def saveData(path, filename, s_object):
     fileroute = path+'/'+filename
     with open(fileroute, "wb") as f:
         pickle.dump(s_object, f, pickle.HIGHEST_PROTOCOL)
-        
+
+"""
+Retrieve the screen name from the user id
+Args:
+    data...........Twitter user data
+Returns:
+    id2sn: List of tuples, containing each tuple the screen name and id 
+    ids: List of strings, each string is a user id
+    sn: List of strings, each string is a screen name
+"""        
 def id2ScreenName(data): 
     id2sn = []
     ids = []
@@ -362,10 +476,29 @@ def id2ScreenName(data):
         sn.append(k)
     print(id2sn)
     return id2sn, ids, sn
-        
+
+"""
+Construct an instance of TwitterAPI using the tokens entered above.
+Returns:
+    An instance of TwitterAPI.
+"""       
 def get_twitter():
     return TwitterAPI(consumer_key, consumer_secret, access_token, access_token_secret)
 
+
+"""
+Handle Twitter's rate limiting
+Sleep for 15 minutes if a Twitter request fails.
+Do this at most max_tries times before quitting.
+    Args:
+      twitter .... A TwitterAPI object.
+      resource ... A resource string to request; e.g., "friends/ids"
+      params ..... A parameter dict for the request, e.g., to specify
+                   parameters like screen_name or count.
+      max_tries .. The maximum number of tries to attempt.
+    Returns:
+      A TwitterResponse object, or None if failed.
+"""
 def robust_request(twitter, resource, params, max_tries=5):
 
     for i in range(max_tries):
@@ -377,9 +510,31 @@ def robust_request(twitter, resource, params, max_tries=5):
             sys.stderr.flush()
             time.sleep(61 * 15) 
 
+
+"""
+Retrieve user screen names for each user id
+Args:
+    twitter.......The TwitterAPI object.
+    userIds...A list of strings of the users ids
+Returns:
+     A list of user screen names
+""" 
 def getScreenName(twitter, userId):
     return robust_request(twitter, 'users/show', {'user_id': userId})   
     
+"""
+Main function, called upon execution of the program.
+Creates a graph with the Twitter data collected from collect.py
+Calculates the number of clusters using the Girvan-Newman algorithm
+Prints the number of clusters and its nodes
+Creates a new training graph from one of the subgraphs and prints the graph information
+Computes the jaccard similarity measure for the training node
+Saves the data of the clusters into a local file.
+Args:
+    None
+Returns:
+    Nothing
+"""
 def main():
     graph = load_graph() 
     twitter = get_twitter()
